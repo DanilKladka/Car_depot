@@ -1,61 +1,37 @@
 import sys
+import mysql.connector
 from PyQt5.QtWidgets import QApplication
 from start_page import StartPage
+import time
 
-try:
-    import mysql.connector
-    db_installed = True
-except ImportError:
-    db_installed = False
-
-if db_installed:
-    db_config = {
-        "host": "localhost",
-        "user": "root",
-        "password": "12345678",
-        "database": "cardepot"
-    }
-
+def create_database(connection):
     try:
-        connectToDB = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+        cursor.execute("USE car_depot")
+        print("База даних вже існує.")
+    except mysql.connector.Error as err:
+        if err.errno == mysql.connector.errorcode.ER_BAD_DB_ERROR:
+            cursor = connection.cursor()
+            cursor.execute("CREATE DATABASE car_depot")
+            print("База даних створена.")
+            
+            cursor.execute("USE car_depot")
 
-    except mysql.connector.errors.DatabaseError:
-        connectToDB = mysql.connector.connect(
-            host=db_config["host"],
-            user=db_config["user"],
-            password=db_config["password"]
-        )
-        cursor = connectToDB.cursor()
-        cursor.execute("CREATE DATABASE IF NOT EXISTS cardepot")
-        connectToDB.database = "cardepot"
+            cursor.execute("""
+                CREATE TABLE details (
+                    ID INT AUTO_INCREMENT PRIMARY KEY,
+                    title VARCHAR(30),
+                    detailType VARCHAR(30),
+                    manufacturer VARCHAR(30),
+                    brand VARCHAR(30),
+                    model VARCHAR(30),
+                    quantity INT,
+                    price DECIMAL(10, 2)
+                )
+            """)
+            print("Таблиця details створена.")
 
-    cursor = connectToDB.cursor()
-    cursor.execute("SHOW TABLES LIKE 'details'")
-    result = cursor.fetchone()
-
-    if not result:
-        
-        cursor.execute("""
-            CREATE TABLE details (
-                ID INT AUTO_INCREMENT PRIMARY KEY,
-                title VARCHAR(30) NOT NULL,
-                detailType VARCHAR(30) NOT NULL,
-                manufacturer VARCHAR(30) NOT NULL,
-                brand VARCHAR(30) NOT NULL,
-                model VARCHAR(30) NOT NULL,
-                quantity INT NOT NULL,
-                price DECIMAL(10, 2) NOT NULL
-            )
-        """)
-
-        
-        cursor.execute("SELECT COUNT(*) FROM details")
-        count = cursor.fetchone()[0]
-        if count == 0:
-            cursor.executemany("""
-        INSERT INTO details (title, detailType, manufacturer, brand, model, quantity, price)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, [
+            initial_data = [
                 ('Колінвал', 'Двигун', 'Nissan', 'Nissan', 'Juke', 10, 10000),
                 ('Поршень', 'Двигун', 'Toyota', 'Nissan', 'Juke', 18, 5000),
                 ('Сальник клапанів', 'Двигун', 'Nissan', 'Nissan', 'Juke', 0, 5760),
@@ -67,15 +43,29 @@ if db_installed:
                 ('Покажчики повороту', 'Автосвітло', 'Toyota', 'Nissan', 'Juke', 10, 3690),
                 ('Коректор фар', 'Автосвітло', 'Ford', 'Nissan', 'X-Trail', 0, 1900),
                 ('Масляний насос', 'Двигун', 'Nissan', 'Nissan', 'X-Trail', 8, 3500),
-                ('Трос ручника', 'Тормозна система', 'Nissan', 'Nissan', 'X-Trail', 6, 5800)
-                ])
-            connectToDB.commit()
+                ('Трос ручника', 'Тормозна система', 'Nissan', 'Toyota', 'Corola', 6, 5800)
+            ]
 
-    cursor.close()
-else:
-    connectToDB = None 
+            cursor.executemany("""
+                INSERT INTO details (title, detailType, manufacturer, brand, model, quantity, price)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, initial_data)
+            print("Додано початкові дані.")
+
+    connection.commit()
 
 if __name__ == '__main__':
+    connectToDB = mysql.connector.connect(
+        host="localhost",
+        user="admin",
+        password="admin"
+    )
+
+    create_database(connectToDB)
+
+    # Затримка перед викликом GetCars()
+    time.sleep(1)
+    
     app = QApplication(sys.argv)
     main_window = StartPage(connectToDB)
     main_window.show()
