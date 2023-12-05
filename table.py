@@ -284,7 +284,7 @@ class TablePage(QtWidgets.QWidget):
                     items = QtWidgets.QTableWidgetItem(str(colomn_data))
                     self.tableWidget.setItem(row_i, colomn_j, items)
         else:
-            self.tableWidget.setRowCount(0)  # No conditions, so clear the table
+            self.tableWidget.setRowCount(0)
 
         cursor.close()
     
