@@ -161,7 +161,7 @@ class AddPage(QtWidgets.QWidget):
         # Перевірка чи всі перевірки ми пройшли для додавання нового запису
         if allFields and valluesQuantity and valluesPrice and self.comboBoxTypeDetail.currentIndex() != 0:
             print("Все поля прошли проверку")
-            query = f"INSERT INTO `cardepot`.`details` (`id`, `title`, `detailType`, `manufacturer`, `brand`, `model`, `quantity`, `price`) VALUES ({int(self.lineID.text())}, '{self.lineName.text()}', '{self.comboBoxTypeDetail.currentText()}', '{self.lineManufacturer.text()}', '{self.lineMark.text()}', '{self.lineModel.text()}', {int(self.lineQuantity.text())}, {float(self.linePrice.text())});"
+            query = f"INSERT INTO `car_depot`.`details` (`id`, `title`, `detailType`, `manufacturer`, `brand`, `model`, `quantity`, `price`) VALUES ({int(self.lineID.text())}, '{self.lineName.text()}', '{self.comboBoxTypeDetail.currentText()}', '{self.lineManufacturer.text()}', '{self.lineMark.text()}', '{self.lineModel.text()}', {int(self.lineQuantity.text())}, {float(self.linePrice.text())});"
             cursor = self.connectToDB.cursor()
             
             try:
